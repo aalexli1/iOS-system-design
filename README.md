@@ -1,4 +1,4 @@
-iOS System Design Interview Guide
+# iOS System Design Interview Guide
 
 This document outlines a reusable, high-leverage framework for tackling iOS system design interviews. It is intentionally structured, comprehensive, and optimized for a 60-minute interview covering architecture, state management, scalability, offline support, performance, and evolvability.
 
@@ -6,29 +6,29 @@ It's focused on UIKit but SwiftUI should modify the presentation layer only.
 
 This is opinionated toward the MVVM-C architecture since I've found it to be the most scalable for large projects.
 
-# Mindset & Framing
+## Mindset & Framing
 
 In an iOS system design interview, the real evaluation is not about memorizing patterns but demonstrating:
--	Ownership of large-scale UIKit app architecture
--	Ability to define the problem like a tech lead
+- Ownership of large-scale UIKit app architecture
+- Ability to define the problem like a tech lead
 - Comfort with state management, real-time data, offline-first constraints
 - Understanding of performance, battery, and reliability considerations
 - Clarity in trade-offs, incremental evolution, and testing strategies
 
 Your goal is to steer the interview using this structure. In a perfect world where the interviewer asks no questions and you drive the entire time, this is what the script would look like:
-	1.	Clarify product & constraints
-	2.	Identify core flows & entities
-	3.	Present layered MVVM-C architecture
-	4.	Discuss state management
-	5.	Define API + real-time strategy
-	6.	Add offline-first model
-	7.	Address performance & battery
-	8.	Cover reliability & lifecycle handling
-	9.	End with evolution, modularity & testing strategy
+1.	Clarify product & constraints
+2.	Identify core flows & entities
+3.	Present layered MVVM-C architecture
+4.	Discuss state management
+5.	Define API + real-time strategy
+6.	Add offline-first model
+7.	Address performance & battery
+8.	Cover reliability & lifecycle handling
+9.	End with evolution, modularity & testing strategy
 
 However, they'll jump in at any time and probably dig deeper into one of these areas. Be ready to pivot.
 
-# Clarifying Product & Constraints
+## Clarifying Product & Constraints
 
 Start by zooming out before you architect:
 
@@ -60,7 +60,7 @@ State explicitly:
 
 This positions you as the driver.
 
-# Core User Flows & Domain Modeling
+## Core User Flows & Domain Modeling
 
 Identify 2-3 major flows:
 
@@ -84,11 +84,11 @@ Relationships:
 
 Call out that these flows and entities drive module boundaries.
 
-# High-Level iOS Architecture (MVVM-C)
+## High-Level iOS Architecture (MVVM-C)
 
 Use a layered approach.
 
-## Layers
+### Layers
 
 Presentation Layer
 - UIKit view controllers
@@ -112,11 +112,11 @@ Data Layer
 - Remote: URLSession / WebSocket
 - Local: Core Data / SQLite / Realm
 
-# State Management (MVVM)
+## State Management (MVVM)
 
 State management is a major focus.
 
-## Pattern Choice
+### Pattern Choice
 
 Use MVVM with unidirectional data flow.
 
@@ -142,21 +142,21 @@ View Controller Responsibilities
 - Applies changes to UIKit views
 - Forwards user interactions as intents
 
-## State Boundaries
+### State Boundaries
 - Local UI state → view controller (input text, focus)
 - Feature state → view model
 - Global state → session/service layer (auth, flags)
 
-## Real-time State Handling
+### Real-time State Handling
 - View model subscribes to observeMessages() or observeFeedUpdates()
 - Merge initial REST load + WebSocket events
 - Use ID-based deduplication
 
 ⸻
 
-# API Design & Data Contracts
+## API Design & Data Contracts
 
-## Repository Protocols
+### Repository Protocols
 
 Repositories abstract the data sources.
 
@@ -168,27 +168,27 @@ protocol MessageRepository {
 }
 ```
 
-## Remote Data Source
+### Remote Data Source
 - URLSession/URLSessionWebSocketTask
 - REST for initial fetches
 - WebSocket/SSE for push updates
 
-## Real-Time Data Strategy
+### Real-Time Data Strategy
 
 - Maintain a single WebSocket service
 - Reconnect on foregrounding with backoff
 - Order messages via server timestamp / sequence number
 - Use idempotent operations
 
-## Data Model Structure
+### Data Model Structure
 - DTOs → Domain Models → View Models
 - Support API versioning & feature flags
 
-# Offline-First Architecture
+## Offline-First Architecture
 
 When offline constraints are introduced, be ready to talk about the following.
 
-## Local Database as Primary Data Source
+### Local Database as Primary Data Source
 
 Recommended options:
 - SwiftData (maybe more for SwiftUI though)
@@ -200,7 +200,7 @@ Repositories:
 - All reads come from local DB first
 - Remote refresh overlays new data
 
-## Outbox / Sync Queue Pattern
+### Outbox / Sync Queue Pattern
 
 Local queue of pending operations:
 - SendMessageOp
@@ -211,47 +211,47 @@ SyncManager:
 - Flushes queue on connectivity restoration
 - Retries with exponential backoff
 
-## Optimistic UI
+### Optimistic UI
 - UI immediately reflects user changes
 - Local DB marks records as pending
 - Pending UI states styled with partial opacity or some icon
 
-## Conflict Resolution
+### Conflict Resolution
 - Simple: last-write-wins
 - Complex: server authoritative or field-level reconciliation
 
-## Background Sync
+### Background Sync
 - Use BGProcessingTask for periodic sync
 - Use background URLSession for uploads
 - Respect system battery constraints
 
-# Performance & Battery Considerations
+## Performance & Battery Considerations
 
 Performance is one of the most important sections if it comes up.
 
-## Main Thread Discipline
+### Main Thread Discipline
 - Keep UI updates on main
 - Move JSON decoding, image processing, DB querying off-main
 - Use DispatchQueue.global(), OperationQueue, or structured concurrency
 
-## Efficient Lists (UITableView / UICollectionView)
+### Efficient Lists (UITableView / UICollectionView)
 - Use diffable data sources
 - Pre-calc heights when possible
 - Use Compositional Layout for complex grids
 - Use cell prefetching APIs
 
-## Image Optimization
+### Image Optimization
 - NSCache or custom LRU cache
 - Decode/resize off-main
 - Lazy loading and preheating
 
-## Network & Battery
+### Network & Battery
 - Prefer WebSockets or APNs push (there are limits to push) over polling
 - Batch network requests
 - Respect Low Power Mode
 - Avoid excessive timers or constant background execution
 
-## Instrumentation
+### Instrumentation
 - Instruments: Know the main ones and when to use them
   - Time Profiler
   - Allocations
@@ -259,29 +259,29 @@ Performance is one of the most important sections if it comes up.
 - os_signpost for tracing critical paths
 - Logging for network, sync, UI
 
-# Reliability & Failure Handling
+## Reliability & Failure Handling
 
-## Error Handling
+### Error Handling
 - Error banners / toast views
 - Retry actions exposed at the view model level
 - Detect stale data and recover gracefully
 
-## Lifecycle Resilience
+### Lifecycle Resilience
 - Handle foreground/background transitions explicitly
 - Pause heavy tasks on background transition
 - Resume real-time streams on foreground
 - Persist critical state before suspension
 
-## Degraded Modes
+### Degraded Modes
 - Use cached local data when offline
 - Skeleton views for partial data
 - Avoid blank screens or blocking errors
 
-# Evolution, Modularity & Testing
+## Evolution, Modularity & Testing
 
 I feel like this is more advanced and deals with packaging multiple features.
 
-## Modularization
+### Modularization
 
 Organize into Swift packages or frameworks:
 - FeedFeature
@@ -291,27 +291,27 @@ Organize into Swift packages or frameworks:
 - Persistence
 - DesignSystem
 
-## Feature Flags & Remote Config
+### Feature Flags & Remote Config
 - Toggle UI or algorithmic experiments
 - Decouple release frequency from feature rollout
 
-## Testing Strategy
+### Testing Strategy
 
-### Unit Tests
+#### Unit Tests
 - ViewModels: test state transitions with mocked repositories
 - Use cases: test business rules
 - Repositories: test with in-memory DB or mock network
 
-### UI Tests
+#### UI Tests
 - Use XCUITest for full flows (login, feed load, offline message sending)
 
-### Snapshot Tests
+#### Snapshot Tests
 - Validate key screens & cell states
 
-### Integration Tests
+#### Integration Tests
 - Smoke tests on real devices and ideally real backend.
 
-# Unified Architecture Diagram (One Picture)
+## Unified Architecture Diagram (One Picture)
 
 Use this as your whiteboard anchor. Start here, then zoom into the specific flow (Feed, Chat, Offline Edit, Upload).
 
@@ -382,7 +382,7 @@ Legend:
 - Sync: SyncManager drains outbox → Network → Repo applies ack → DB emits.
 ```
 
-# Diagrams & Detailed Sequences
+## Diagrams & Detailed Sequences
 
 Use this section as your “walkthrough script.” For each scenario:
 - Start with the diagram (boxes + arrows)
@@ -390,7 +390,7 @@ Use this section as your “walkthrough script.” For each scenario:
 - Walk the sequence (happy path)
 - Call out 2–3 edge cases + where they live
 
-## Infinite Feed (Pagination + Caching + Reconciliation)
+### Infinite Feed (Pagination + Caching + Reconciliation)
 
 Key APIs (what to mention)
 ```swift
